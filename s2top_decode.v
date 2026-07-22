@@ -13,8 +13,8 @@ module top_decode (
     output [4:0] rs1_D,rs2_D,rd_D
 );
 
-wire funct7;
-wire [2:0] ImmSel,ALUOp;
+wire [6:0] funct7;
+wire [2:0] ImmSel_D,ALUOp_D;
 
 instruction_decoder u_instruction_decoder (
     .instruction_D(instruction_D),//ip
@@ -23,7 +23,7 @@ instruction_decoder u_instruction_decoder (
     .rs2_D(rs2_D),
     .rd_D(rd_D),
     .funct3_D(funct3_D),
-    .funct7(funct7)
+    .funct7_D(funct7)
 );
 
 register_file u_register_file (
@@ -34,15 +34,15 @@ register_file u_register_file (
     .rs2_D(rs2_D),
     .RegWrite_W(RegWrite_W),
     .write_data_W(write_data_W),
-    .rs1_data_D(rs1_data_D),
-    .rs2_data_D(rs2_data_D)
+    .rs1_data_D(data1_D),
+    .rs2_data_D(data2_D)
 );
 
 
 
 control_unit u_control_unit (
     .instruction_D(instruction_D),
-    .RegWrite_D(RegWrite_D),
+    .RegWrite_D(Reg_write_D),
     .ALUSrc_D(ALUSrc_D),
     .MemoryRead_D(MemoryRead_D),
     .MemoryWrite_D(MemoryWrite_D),

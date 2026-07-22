@@ -1,5 +1,5 @@
 module fetch_top (
-    input clk,reset,pc_sel,
+    input clk,reset,pc_sel,PCWrite,
     input [31:0] branched_address,
     output [31:0] pc,instruction
 );
@@ -10,6 +10,7 @@ module fetch_top (
     pc_top u1_pc_top (
         .clk(clk),
         .reset(reset),
+        .PCWrite(PCWrite),
         .pc(pc),
         .pc_sel(pc_sel),
         .branched_address(branched_address)

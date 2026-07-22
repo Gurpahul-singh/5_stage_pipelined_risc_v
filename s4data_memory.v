@@ -6,12 +6,14 @@ module data_memory (
     output reg [31:0] read_data
 );
     
+    integer i;
+
 reg [31:0] memory [0:255]; // 256 words of 32-bit memory
 
 always @(posedge clk) begin
     if (MemoryWrite_M) begin
         // memory[address_M[31:2]] <= write_data_M; // Write data to memory
-        case (funct3_m)
+        case (funct3_M)
             3'b000: begin // Store Byte
                 case (address_M[1:0])
                     2'b00: memory[address_M[31:2]][7:0] <= write_data_M[7:0];
@@ -58,6 +60,25 @@ always @(*) begin
                                 {{16{1'b0}},memory[address_M[31:2]][31:16]}; // Load halfword, zero-extend
         endcase
     end
+end
+// for debugging purposes
+initial begin
+    for(i=0;i<256;i=i+1)
+        memory[i]=32'b0;
+
+    memory[25]=32'd15;
+end
+// for debugging purposes
+always @(posedge clk) begin
+    if (MemoryRead_M)
+        $display("LOAD addr=%d index=%d data=%d",
+                 address_M,
+                 address_M[31:2],
+                 memory[address_M[31:2]]);
+    $display("MEM stage: MemRead=%b Addr=%d Data=%d",
+          MemoryRead_M,
+          address_M,
+          read_data);
 end
 
 endmodule

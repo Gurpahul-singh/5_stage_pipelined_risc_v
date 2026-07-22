@@ -54,6 +54,7 @@ begin
         MemWrite_M <= 0;
         WriteBackSel_M <= 0;
         pc_M <= 0;
+        funct3_M <= 0;
     end
     else
     begin
@@ -72,6 +73,7 @@ begin
         MemRead_M <= MemRead_E;
         MemWrite_M <= MemWrite_E;
         WriteBackSel_M <= WriteBackSel_E;
+        funct3_M <= funct3_E;
     end
 end
 

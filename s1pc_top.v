@@ -1,5 +1,5 @@
 module pc_top (
-    input clk,reset,pc_sel,
+    input clk,reset,pc_sel,PCWrite,
     input [31:0] branched_address,
     output [31:0] pc
 );
@@ -9,6 +9,7 @@ module pc_top (
     pc u1_pc (
         .clk(clk),
         .reset(reset),
+        .PCWrite(PCWrite),
         .next_address(next_address),
         .pc(pc)
     );

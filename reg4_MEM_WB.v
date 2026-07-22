@@ -18,7 +18,7 @@ module MEM_WB(
     output reg [4:0] rd_W,
 
     output reg RegWrite_W,
-    output reg [1:0] WriteBackSel_W
+    output reg [1:0] WriteBackSel_W,
     output reg [31:0] pc_W
 
 );
@@ -34,6 +34,7 @@ begin
 
         RegWrite_W <= 0;
         WriteBackSel_W <= 0;
+        pc_W<=0;
     end
     else
     begin
@@ -44,6 +45,8 @@ begin
 
         RegWrite_W <= RegWrite_M;
         WriteBackSel_W <= WriteBackSel_M;
+
+        pc_W <= pc_M;
     end
 end
 

@@ -10,7 +10,6 @@ module ID_EX (
     input [4:0] rs1_D,rs2_D,rd_D,
     input ID_EX_Flush,
     input ID_EX_Branch_Flush,
-    // input [31:0] rs2_data_D,
 
     output reg [31:0] data1_E, data2_E, immediate_E, pc_E,
     output reg [3:0] ALUControl_E,
@@ -19,7 +18,6 @@ module ID_EX (
     output reg [2:0] funct3_E,
     output reg [6:0] opcode_E,
     output reg [4:0] rd_E,rs1_E,rs2_E
-    // output reg [31:0] rs2_data_E
 );
     
     always @(posedge clk or posedge reset) begin
@@ -44,8 +42,6 @@ module ID_EX (
             rd_E <= 5'b0;
             rs1_E <= 5'b0;
             rs2_E <= 5'b0;
-            // rs2_data_E <= 32'b0;
-
             
 
         end else begin
@@ -69,7 +65,6 @@ module ID_EX (
             rd_E <= rd_D;
             rs1_E <= rs1_D;
             rs2_E <= rs2_D;
-            // rs2_data_E <= rs2_data_D;
         end
     end
 endmodule

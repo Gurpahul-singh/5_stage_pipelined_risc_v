@@ -56,7 +56,6 @@ module riscv_top (
         .pc_F(pc),
         .IF_ID_Write(IF_ID_Write),
         .IF_ID_Flush(pc_sel), // Flush the IF/ID register when a branch is taken
-        // output ports for IF_ID stage
         .instruction_D(instruction_D),
         .pc_D(pc_D)
     );

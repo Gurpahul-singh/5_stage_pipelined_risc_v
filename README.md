@@ -1,56 +1,160 @@
-# RV32I Single-Cycle RISC-V Processor
+# RV32I 5-Stage Pipelined RISC-V Processor
 
-A 32-bit **Single-Cycle RISC-V (RV32I)** processor designed and implemented in **Verilog HDL**. The processor executes one instruction per clock cycle and supports the complete RV32I base integer instruction set.
-
-## Features
-
-- ✅ 32-bit RV32I ISA
-- ✅ Single-cycle datapath
-- ✅ Harvard architecture
-- ✅ Modular Verilog implementation
-- ✅ Complete instruction decoding
-- ✅ Register File (32 × 32-bit registers)
-- ✅ Immediate Generator
-- ✅ ALU Control Unit
-- ✅ Main Control Unit
-- ✅ ALU
-- ✅ Program Counter
-- ✅ Branch and Jump Unit
-- ✅ Instruction Memory
-- ✅ Data Memory
-- ✅ Load and Store support
-- ✅ Verified using custom testbenches
+A Verilog implementation of a **32-bit RISC-V (RV32I) 5-stage pipelined processor** with forwarding, hazard detection, branch handling, and support for the complete RV32I base integer instruction set.
 
 ---
 
-## Supported RV32I Instructions
+## Features
 
-### Arithmetic & Logical
+- ✅ RV32I Base Integer ISA
+- ✅ 32-bit datapath
+- ✅ 5-stage pipeline
+  - Instruction Fetch (IF)
+  - Instruction Decode (ID)
+  - Execute (EX)
+  - Memory Access (MEM)
+  - Write Back (WB)
+- ✅ Pipeline registers
+  - IF/ID
+  - ID/EX
+  - EX/MEM
+  - MEM/WB
+- ✅ Forwarding Unit
+- ✅ Hazard Detection Unit
+- ✅ Branch Flush Logic
+- ✅ JAL and JALR support
+- ✅ Immediate Generator
+- ✅ ALU Control Unit
+- ✅ Register File
+- ✅ Instruction Memory
+- ✅ Data Memory
+- ✅ Verified through simulation using Icarus Verilog and GTKWave
+
+---
+
+# Architecture
+
+The processor follows the classic 5-stage RISC-V pipeline.
+
+```
+                +----------------+
+                | Instruction    |
+                |    Memory      |
+                +--------+-------+
+                         |
+                         v
+                     IF / ID
+                         |
+                         v
+                +----------------+
+                | Register File  |
+                | + Control Unit |
+                +--------+-------+
+                         |
+                         v
+                     ID / EX
+                         |
+                         v
+                +----------------+
+                |      ALU       |
+                +--------+-------+
+                         |
+                         v
+                    EX / MEM
+                         |
+                         v
+                +----------------+
+                | Data Memory    |
+                +--------+-------+
+                         |
+                         v
+                    MEM / WB
+                         |
+                         v
+                  Register File
+```
+
+---
+
+# Pipeline Stages
+
+## Instruction Fetch (IF)
+
+- Fetch instruction from instruction memory.
+- Update Program Counter (PC).
+- Pass instruction and PC to IF/ID register.
+
+---
+
+## Instruction Decode (ID)
+
+- Decode instruction.
+- Read source registers.
+- Generate immediate.
+- Generate control signals.
+- Hazard detection.
+
+---
+
+## Execute (EX)
+
+- Perform ALU operations.
+- Calculate branch targets.
+- Branch decision.
+- Address calculation.
+- Forward operands when required.
+
+---
+
+## Memory (MEM)
+
+- Load instructions
+- Store instructions
+
+---
+
+## Write Back (WB)
+
+Write result back into register file from
+
+- ALU Result
+- Memory
+- PC + 4
+
+---
+
+# Supported Instruction Set
+
+## R-Type
 
 - ADD
 - SUB
-- AND
-- OR
-- XOR
 - SLL
-- SRL
-- SRA
 - SLT
 - SLTU
+- XOR
+- SRL
+- SRA
+- OR
+- AND
 
-### Immediate Instructions
+---
+
+## I-Type
 
 - ADDI
-- ANDI
-- ORI
-- XORI
 - SLTI
 - SLTIU
+- XORI
+- ORI
+- ANDI
 - SLLI
 - SRLI
 - SRAI
 
-### Load Instructions
+---
+
+## Load Instructions
 
 - LB
 - LH
@@ -58,13 +162,17 @@ A 32-bit **Single-Cycle RISC-V (RV32I)** processor designed and implemented in *
 - LBU
 - LHU
 
-### Store Instructions
+---
+
+## Store Instructions
 
 - SB
 - SH
 - SW
 
-### Branch Instructions
+---
+
+## Branch Instructions
 
 - BEQ
 - BNE
@@ -73,96 +181,148 @@ A 32-bit **Single-Cycle RISC-V (RV32I)** processor designed and implemented in *
 - BLTU
 - BGEU
 
-### Jump Instructions
+---
+
+## Jump Instructions
 
 - JAL
 - JALR
 
-### Upper Immediate Instructions
+---
+
+## Upper Immediate
 
 - LUI
 - AUIPC
 
 ---
 
-## Processor Datapath
+# Hazard Handling
 
-The processor follows the standard **single-cycle datapath**, where every instruction completes in one clock cycle.
+## Forwarding Unit
 
-Major components include:
+The forwarding unit resolves data hazards without introducing unnecessary stalls.
 
-- Program Counter
-- Instruction Memory
-- Control Unit
-- Register File
-- Immediate Generator
-- ALU Control
-- ALU
-- Data Memory
-- Branch & Jump Unit
-- Write Back Multiplexer
+Supported forwarding paths:
+
+- EX/MEM → EX
+- MEM/WB → EX
+
+This allows dependent arithmetic instructions to execute correctly in consecutive cycles.
 
 ---
 
-## Project Structure
+## Hazard Detection Unit
+
+The hazard detection unit detects load-use hazards.
+
+When a load instruction is immediately followed by an instruction requiring the loaded value:
+
+- PC is stalled
+- IF/ID register is stalled
+- Control signals entering the pipeline are cleared to insert a bubble
+
+---
+
+## Control Hazard Handling
+
+For taken branches and jumps:
+
+- Incorrect instructions already fetched are flushed.
+- PC is updated with the correct target address.
+
+Supported instructions:
+
+- BEQ
+- BNE
+- BLT
+- BGE
+- BLTU
+- BGEU
+- JAL
+- JALR
+
+---
+
+# Project Structure
 
 ```
+riscv32i-pipelined/
+│
 ├── rtl/
 │   ├── alu.v
-│   ├── alu_control.v
-│   ├── branch_jump_unit.v
 │   ├── control_unit.v
-│   ├── data_memory.v
+│   ├── datapath.v
+│   ├── forwarding_unit.v
+│   ├── hazard_unit.v
 │   ├── immediate_generator.v
 │   ├── instruction_memory.v
-│   ├── muxes.v
-│   ├── pc.v
+│   ├── data_memory.v
 │   ├── register_file.v
-│   └── riscv_top.v
+│   ├── IF_ID.v
+│   ├── ID_EX.v
+│   ├── EX_MEM.v
+│   ├── MEM_WB.v
+│   └── top.v
 │
 ├── testbench/
-│   └── riscv_tb.v
+│   └── top_tb.v
 │
-├── waveforms/
-│   └── *.vcd
+├── results/
+│   ├── program.hex
+│   ├── results_photo1.png
+│   ├── results_photo2.png   
+│   └── results.txt ( result on terminal )
 │
-├── images/
-│   └── datapath.png
+│
+├── RISC-V32I_PIPELINED_DIAGRAM.png
+│   
+│
+├── riscv32i_pipelined.vvd
+│   
+├── top.vcd
 │
 └── README.md
 ```
 
-*(Modify the folder names if your repository structure differs.)*
+---
+
+# Verification
+
+The processor has been verified using dedicated assembly programs covering:
+
+| Test | Status |
+|------|--------|
+| Arithmetic Instructions | ✅ |
+| Logical Instructions | ✅ |
+| Shift Instructions | ✅ |
+| Comparison Instructions | ✅ |
+| Forwarding | ✅ |
+| Load-Use Hazard | ✅ |
+| Register File Write-Back | ✅ |
+| Branch Taken | ✅ |
+| Branch Not Taken | ✅ |
+| JAL | ✅ |
+| JALR | ✅ |
+| Memory Load/Store | ✅ |
 
 ---
 
-## Datapath
+# Simulation
 
-Add your datapath image here.
-
-```markdown
-![Datapath](images/datapath.png)
-```
-
----
-
-## Simulation
-
-The design can be simulated using **Icarus Verilog** or **ModelSim**.
-
-### Compile
+Compile using Icarus Verilog
 
 ```bash
-iverilog -o riscv *.v
+iverilog -o riscv32i rtl/*.v testbench/top_tb.v
 ```
 
-### Run
+Run simulation
 
 ```bash
-vvp riscv
+vvp riscv32i
 ```
 
-### Generate Waveform
+Open waveform
 
 ```bash
 gtkwave top.vcd
@@ -170,55 +330,24 @@ gtkwave top.vcd
 
 ---
 
-## Design Highlights
-
-- Modular architecture for easy debugging and extension.
-- Supports signed and unsigned arithmetic.
-- Byte and half-word load/store operations with proper sign and zero extension.
-- Implements all RV32I branch conditions.
-- Clean separation of datapath and control logic.
-- Synthesizable Verilog implementation.
-
----
-
-## Future Improvements
-
-- 5-stage Pipelined RV32I Processor
-- Hazard Detection Unit
-- Data Forwarding Unit
-- Branch Prediction
-- CSR Instructions
-- Exception and Interrupt Handling
-- Instruction & Data Cache
-- RV32M Extension (Multiply/Divide)
-
----
-
-## Tools Used
+# Tools Used
 
 - Verilog HDL
 - Icarus Verilog
 - GTKWave
-- Visual Studio Code
 
 ---
 
-## Learning Resources
+# Future Improvements
 
-- RISC-V Unprivileged ISA Specification
-- Computer Organization and Design (Patterson & Hennessy)
-- Digital Design and Computer Architecture (Harris & Harris)
+Possible extensions include:
 
----
-
-## Author
-
-**Your Name**
-
-Electronics & Communication Engineering
+- Branch Prediction
+- Instruction Cache
+- Data Cache
+- CSR Instructions
+- RV32M Extension (Multiply/Divide)
+- Exception and Interrupt Handling
+- AXI/AHB Memory Interface
 
 ---
-
-## License
-
-This project is released under the MIT License.
